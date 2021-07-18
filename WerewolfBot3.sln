@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31402.337
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "WerewolfBot3", "WerewolfBot3\WerewolfBot3.pyproj", "{4F41E808-2D24-473A-B046-CE76E466E6A2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4F41E808-2D24-473A-B046-CE76E466E6A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F41E808-2D24-473A-B046-CE76E466E6A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {64810CD7-2843-4E66-81CC-E24AAB382516}
+	EndGlobalSection
+EndGlobal

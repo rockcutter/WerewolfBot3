@@ -1,0 +1,5 @@
+VILLAGER = "villager"
+WEREWOLF = "werewolf"
+KNIGHT = "knight"
+FORTUNETELLER = "fortuneteller"
+SHAMAN = "shaman"
