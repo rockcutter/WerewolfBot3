@@ -10,7 +10,7 @@ class Status(object):
     killedPlayer = None
     formerExecutedIsBlack = False
     gameStarted = False
-    day = 1
+    day = 0
     night = False
 
     #特定ロール
@@ -47,10 +47,6 @@ def InitStatus():
     st.gameStarted = False
     st.day = 1
     st.night = False
-
-    #特定ロール
-    st.exeRole = None
-    st.killedRole = None
     return
 
 def InitVoteStatus():
@@ -129,19 +125,26 @@ def PlayerSearch(playerList, playerObj):
     return
 
 async def Daytime(playerList):
+    st.day += 1;
+
+    await st.channel.send(str(st.day) + "日目朝")
+    if(st.killedPlayer != None):
+        await st.channel.send(str(st.killedPlayer.playerObj) + "が無残な死体となって発見されました")
+    else:
+        await st.channel.send("今朝は死体は見つかりませんでした")
     if(await WinnerCheck(playerList)):
         return
 
     #霊媒能力
     for pl in RolePlayerSearch(playerList,rolenamelist.SHAMAN):
+        if(st.day == 1):
+            continue
         if(st.formerExecutedIsBlack):
             await pl.send("昨日処刑されたプレイヤーは黒です")
         else:
             await pl.send("昨日処刑されたプレイヤーは白です")
 
-    await st.channel.send(str(st.day) + "日目朝")
-    if(st.killedPlayer != None):
-        await st.channel.send(st.killedPlayer + "が無残な死体となって発見されました")
+
     await st.channel.send("誰が人狼なのかを話し合い、本日処刑する人を決めてください。```!vote [番号]```コマンドで投票できます。```!list```コマンドでプレイヤーの番号が確認できます")
     vstatus.voteMode = True
     return
@@ -175,6 +178,7 @@ async def Vote(message, playerList):
                 await st.channel.send("同票のプレイヤーがいるため、処刑は行われませんでした")
                 st.exeRole = None
                 InitVoteStatus()
+                await Night(playerList)
                 return
         await Execute(executedPlayer, playerList)
         await st.channel.send("全員の投票が終わり、票が集計されました。\n`" + str(executedPlayer.playerObj) + "`が処刑されました")
@@ -201,6 +205,7 @@ async def Night(playerList):
     return
 
 def CountAbility(playerList):
+    abistatus.abilityCount = 0
     for plClass in playerList:
         if(plClass.roleName != rolenamelist.VILLAGER and plClass.roleName != rolenamelist.SHAMAN):
             abistatus.abilityCount += 1
@@ -215,33 +220,39 @@ async def Ability(playerList, message):
     arg = int(bufList[1])
 
     plClass = PlayerSearch(playerList, message.author)
-    if(plClass not in abistatus.usedPlayerList and
-       len(playerList) > arg and
-       arg > 0):
+    if(plClass in abistatus.usedPlayerList or
+       len(playerList) <= arg or
+       arg < 0):
         return
 
     plClass = PlayerSearch(playerList, message.author)
-    if(plClass == rolenamelist.FORTUNETELLER):
+    if(plClass.roleName == rolenamelist.FORTUNETELLER and
+       playerList[arg].playerObj != plClass.playerObj
+       ):
         if(playerList[arg].roleName == rolenamelist.WEREWOLF):
             await message.author.send("黒です")
+            abistatus.usedPlayerCount += 1
         else:
             await message.author.send("白です")
             abistatus.usedPlayerCount += 1
+        abistatus.usedPlayerList.append(plClass)
     
-    if(plClass == rolenamelist.KNIGHT and
-       playerlist[arg].playerObj != plClass.playerObj):
-        abistatus.defencedPlayerList.append(playerlist[arg])
+    if(plClass.roleName == rolenamelist.KNIGHT and
+       playerList[arg].playerObj != plClass.playerObj):
+        abistatus.defencedPlayerList.append(playerList[arg])
         await message.author.send("守護対象を決定しました")
+        abistatus.usedPlayerList.append(plClass)
         abistatus.usedPlayerCount += 1
 
-    if(plClass == rolenamelist.WEREWOLF and
-       playerlist[arg].roleName != rolenamelist.WEREWOLF):
+    if(plClass.roleName == rolenamelist.WEREWOLF and
+       playerList[arg].roleName != rolenamelist.WEREWOLF):
         await message.author.send("対象を襲撃候補リストに入れました")
-        abistatus.killPlayerList.append(playerlist[arg])
+        abistatus.killPlayerList.append(playerList[arg])
+        abistatus.usedPlayerList.append(plClass)
         abistatus.usedPlayerCount += 1
 
     #能力終了フェイズ
-    if(abistatus.usedPlayerCount >= len(playerList)):
+    if(abistatus.usedPlayerCount >= abistatus.abilityCount):
         random.shuffle(abistatus.killPlayerList)
         st.killedPlayer = abistatus.killPlayerList.pop()
         if(st.killedPlayer in abistatus.defencedPlayerList):
@@ -254,7 +265,7 @@ async def Ability(playerList, message):
 
 async def WinnerCheck(playerList):
     werewolfCount = len(RolePlayerSearch(playerList, rolenamelist.WEREWOLF))
-    if(werewolfCount >= len(playerList)):
+    if(werewolfCount >= len(playerList) - werewolfCount):
         await st.channel.send("村人陣営の数が人狼陣営以下になりました\n人狼陣営の勝利です")
         InitStatus()
         playerList.clear()
